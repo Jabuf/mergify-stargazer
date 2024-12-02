@@ -7,11 +7,15 @@ from fastapi import FastAPI
 
 from src.api import router
 from src.config.urls import API_VERSION
+from src.services.github import check_github_connection
 
 # Load environment variables from .env
 load_dotenv()
 
 app = FastAPI()
+
+# Check if GitHub connection is valid
+check_github_connection()
 
 app.include_router(router, prefix=API_VERSION)
 
