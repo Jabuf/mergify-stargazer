@@ -6,14 +6,14 @@ from dotenv import load_dotenv
 from fastapi import FastAPI
 
 from src.api import router
+from src.config.urls import API_VERSION
 
 # Load environment variables from .env
 load_dotenv()
 
 app = FastAPI()
 
-app.include_router(router)
-
+app.include_router(router, prefix=API_VERSION)
 
 @app.get("/")
 def read_root():
