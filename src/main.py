@@ -1,17 +1,24 @@
+import os
 from typing import Union
-from fastapi import FastAPI
+
 import uvicorn
 from dotenv import load_dotenv
-import os
+from fastapi import FastAPI
+
+from src.api import router
 
 # Load environment variables from .env
 load_dotenv()
 
 app = FastAPI()
 
+app.include_router(router)
+
+
 @app.get("/")
 def read_root():
     return {"Hello": "World"}
+
 
 @app.get("/items/{item_id}")
 def read_item(item_id: int, q: Union[str, None] = None):
