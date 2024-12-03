@@ -10,6 +10,7 @@ from fastapi.openapi.utils import get_openapi
 from src.api.routes import router
 from src.config.urls import API_VERSION
 from src.services.github import check_github_connection, GitHubAPIException
+from src.utils.jwt_handler import JWTHandler, AuthenticationError
 
 # Load environment variables from .env
 load_dotenv()
@@ -29,7 +30,12 @@ app = FastAPI()
 try :
     check_github_connection()
 except GitHubAPIException as e:
-    logger.error(f"GitHub API error: {e}")
+    logger.critical(f"GitHub API error: {e}")
+# Check if JWT secrets are present
+try :
+    JWTHandler.check_secrets()
+except AuthenticationError as e:
+    logger.critical(f"Configuration error: {e}")
 
 app.include_router(router, prefix=API_VERSION)
 
