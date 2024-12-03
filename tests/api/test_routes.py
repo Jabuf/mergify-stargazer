@@ -4,6 +4,7 @@ from fastapi.testclient import TestClient
 
 from src.config.urls import ROUTE_STARNEIGHBOURS, API_VERSION
 from src.main import app
+from src.utils.jwt_handler import JWTHandler
 
 
 class TestStarNeighboursEndpoint(unittest.TestCase):
@@ -20,9 +21,13 @@ class TestStarNeighboursEndpoint(unittest.TestCase):
         # Create the TestClient instance
         client = TestClient(app)
 
+        # Generate a valid JWT token
+        valid_token = JWTHandler._generate_token({"username": "valid_user"}, secret=JWTHandler.access_secret, lifetime=JWTHandler.access_token_lifetime)
+
         # Simulate a GET request to /starneighbours
         url = API_VERSION + ROUTE_STARNEIGHBOURS.format(user="owner", repo="repo")
-        response = client.get(url)
+        headers = {"Authorization": f"Bearer {valid_token}"}
+        response = client.get(url, headers=headers)
 
         # Assertions
         mock_get_repository_neighbours.assert_called_once_with("owner", "repo")
