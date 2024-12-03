@@ -3,7 +3,7 @@ import os
 from typing import List
 
 from dotenv import load_dotenv
-from github import Github, Repository, Stargazer, RateLimit, NamedUser
+from github import Github, Repository, Stargazer, RateLimit, NamedUser, GithubException
 from github.PaginatedList import PaginatedList
 
 # Load environment variables
@@ -16,6 +16,14 @@ g = Github(GITHUB_TOKEN)
 logger = logging.getLogger('uvicorn.error')
 
 
+def _safe_github_call(func, *args, **kwargs):
+    try:
+        return func(*args, **kwargs)
+    except GithubException as e:  # Catch only GitHub-related exceptions
+        logger.error(f"GitHub API error ({e.__class__.__name__}) in function {func.__name__}: {e}")
+        raise GitHubAPIException(f"Error calling GitHub API: {e}", code=e.status, github_exception=e)
+
+
 def check_github_connection() -> None:
     """
     Check if GitHub connection is working by hitting the rate limit endpoint.
@@ -26,15 +34,26 @@ def check_github_connection() -> None:
     Raises:
         Exception: If the GitHub API returns a non-200 status code
     """
+    # Check if token is present
     if GITHUB_TOKEN is None:
-        logger.error("No GitHub token provided!")
-    rate_limit: RateLimit = g.get_rate_limit()
+        logger.critical("No GitHub token provided!")
+        raise GitHubAPIException("GitHub token is missing.")
+
+    # Check if rate limit is not reached
+    try:
+        rate_limit: RateLimit = _safe_github_call(g.get_rate_limit)
+    except GithubException as e:
+        logger.error(f"Failed to fetch rate limit: {e}")
+        raise GitHubAPIException(f"GitHub API rate limit check failed: {e}")
+
     if rate_limit.core.remaining == 0:
-        raise Exception("Rate limit exceeded")
+        logger.error("GitHub API rate limit exceeded.")
+        raise GitHubAPIException("Rate limit exceeded")
+
     logger.info("GitHub connection successful!")
 
 
-def get_stargazers(owner: str, repo: str) -> PaginatedList[NamedUser]:
+def get_stargazers(owner: str, repo: str) -> PaginatedList[NamedUser] | None:
     """
     Fetch stargazers for a given repository.
 
@@ -45,8 +64,10 @@ def get_stargazers(owner: str, repo: str) -> PaginatedList[NamedUser]:
     Returns:
         List[Stargazer]: A list of stargazer objects.
     """
-    repo: Repository = g.get_repo(f"{owner}/{repo}")
-    return repo.get_stargazers()
+    repo = _safe_github_call(g.get_repo, f"{owner}/{repo}")
+    if repo is None:
+        return None  # Return an empty list if the repository was not found
+    return _safe_github_call(repo.get_stargazers)
 
 
 def get_starred_repos_for_user(user: NamedUser) -> PaginatedList[Repository]:
@@ -59,5 +80,18 @@ def get_starred_repos_for_user(user: NamedUser) -> PaginatedList[Repository]:
     Returns:
         List[Repository]: List of repositories the user has starred.
     """
-    starred_repos: PaginatedList[Repository] = user.get_starred()
+    starred_repos: PaginatedList[Repository] = _safe_github_call(user.get_starred)
     return starred_repos
+
+
+class GitHubAPIException(Exception):
+    """Exception raised for errors related to GitHub API calls."""
+
+    def __init__(self, message: str, code: int = None, github_exception: GithubException = None):
+        super().__init__(message)
+        self.message = message
+        self.code = code if code is not None else (github_exception.status if github_exception else 500)
+        self.github_exception = github_exception
+
+    def __str__(self):
+        return f"GitHub API Error {self.code}: {self.message}"

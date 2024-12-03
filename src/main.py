@@ -9,7 +9,7 @@ from fastapi.openapi.utils import get_openapi
 
 from src.api.routes import router
 from src.config.urls import API_VERSION
-from src.services.github import check_github_connection
+from src.services.github import check_github_connection, GitHubAPIException
 
 # Load environment variables from .env
 load_dotenv()
@@ -26,7 +26,10 @@ logger.info("Log level : " + log_level)
 app = FastAPI()
 
 # Check if GitHub connection is valid
-check_github_connection()
+try :
+    check_github_connection()
+except GitHubAPIException as e:
+    logger.error(f"GitHub API error: {e}")
 
 app.include_router(router, prefix=API_VERSION)
 

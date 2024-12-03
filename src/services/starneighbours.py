@@ -1,11 +1,14 @@
+import logging
 from collections import defaultdict
 from typing import List, Dict
 
-from github import Repository
+from github import Repository, GithubException
 from github.NamedUser import NamedUser
 from github.PaginatedList import PaginatedList
 
 from src.services.github import get_stargazers, get_starred_repos_for_user
+
+logger = logging.getLogger('uvicorn.error')
 
 
 def get_repository_neighbours(owner: str, repo: str) -> List[Dict]:
@@ -19,20 +22,29 @@ def get_repository_neighbours(owner: str, repo: str) -> List[Dict]:
     Returns:
         List[Dict]: A list of repositories with shared stargazers.
     """
-    # Step 1: Get stargazers for the given repository
     try:
+        # Step 1: Get stargazers for the given repository
         stargazers: PaginatedList[NamedUser] = get_stargazers(owner, repo)
-    except Exception as e:
-        raise Exception(f"Failed to get stargazers for {owner}/{repo}: {e}")
+        if not stargazers:
+            logger.warning(f"No stargazers found for {repo} by {owner}")
+            return []
+
+    except GithubException as e:
+        logger.error(f"GitHub API error while fetching stargazers for {repo} by {owner}: {e}")
+        raise
 
     # Step 2: Build a map of repositories to users who starred them
     repo_to_users: Dict[str, set[str]] = defaultdict(set)
 
+    if stargazers is None:
+        return []
+
     for stargazer in stargazers:
         try:
             starred_repos: PaginatedList[Repository] = get_starred_repos_for_user(stargazer)
-        except Exception as e:
-            raise Exception(f"Failed to get starred repositories for user {stargazer.login}: {e}")
+        except GithubException as e:
+            logger.error(f"GitHub API error while fetching starred repositories for {stargazer.login}: {e}")
+            continue
 
         # Step 3: Add the stargazer to each repository they have starred
         for starred_repo in starred_repos:
