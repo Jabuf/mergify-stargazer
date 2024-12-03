@@ -2,13 +2,14 @@ import unittest
 from unittest.mock import patch, MagicMock
 
 from github import Repository
+from github.NamedUser import NamedUser
 
 from src.services.github import get_stargazers, get_starred_repos_for_user
 
 
 class TestGitHubService(unittest.TestCase):
 
-    @patch('github.Github.get_repo')  # Mocking get_repo method to return a mock repo
+    @patch('github.Github.get_repo')
     def test_get_stargazers(self, mock_get_repo):
         # Mock the return value of get_stargazers
         mock_stargazers = [
@@ -28,34 +29,29 @@ class TestGitHubService(unittest.TestCase):
         # Assertions
         mock_get_repo.assert_called_once_with(f"{owner}/{repo}")
         mock_repo.get_stargazers.assert_called_once()
-        self.assertEqual(stargazers[0]["login"], "userA")  # Check login of first stargazer
-        self.assertEqual(stargazers[1]["id"], 2)  # Check ID of second stargazer
+        self.assertEqual(stargazers[0]["login"], "userA")
+        self.assertEqual(stargazers[1]["id"], 2)
 
-    @patch('github.Github.get_user')  # Mocking the get_user method to return a mock user
-    def test_get_starred_repos_for_user(self, mock_get_user):
-        # Mock the user object
-        mock_user = MagicMock()
+    @patch('src.services.starneighbours.NamedUser.get_starred')
+    def test_get_starred_repos_for_user(self, mock_get_starred):
+        # Mock data for starred repositories
+        mock_repo_1 = MagicMock(spec=Repository, full_name="owner/repo1")
+        mock_repo_2 = MagicMock(spec=Repository, full_name="owner/repo2")
+        mock_starred_repos = [mock_repo_1, mock_repo_2]
 
-        # Mock the return value of get_starred (a PaginatedList of Repository objects)
-        mock_starred_repos = [
-            MagicMock(spec=Repository, full_name="repo1"),
-            MagicMock(spec=Repository, full_name="repo2"),
-            MagicMock(spec=Repository, full_name="repo3")
-        ]
+        # Mock the return value of get_starred
+        mock_get_starred.return_value = mock_starred_repos
 
-        # Set the mock to return the mocked starred repositories
-        mock_user.get_starred.return_value = mock_starred_repos
+        # Create a mock user and mock the get_starred method
+        mock_user = MagicMock(spec=NamedUser)
+        mock_user.get_starred = mock_get_starred
 
-        # Mock the get_user to return our mock_user
-        mock_get_user.return_value = mock_user
-
-        starred_url = "userA/starred_url"
-        starred_repos = get_starred_repos_for_user(starred_url)
+        # Call the function to test
+        starred_repos = get_starred_repos_for_user(mock_user)
 
         # Assertions
-        mock_get_user.assert_called_once_with(starred_url)
-        mock_user.get_starred.assert_called_once()
-        self.assertEqual(starred_repos[0].full_name, "repo1")  # Check if the full_name matches
+        mock_get_starred.assert_called_once()
+        self.assertEqual(starred_repos, mock_starred_repos)
 
 
 if __name__ == '__main__':

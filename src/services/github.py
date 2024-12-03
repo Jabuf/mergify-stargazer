@@ -1,3 +1,4 @@
+import logging
 import os
 from typing import List
 
@@ -10,7 +11,9 @@ load_dotenv()
 
 # Authenticate using the GitHub token
 GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")
-g = Github(GITHUB_TOKEN)  # Instantiate a GitHub client
+g = Github(GITHUB_TOKEN)
+
+logger = logging.getLogger('uvicorn.error')
 
 
 def check_github_connection() -> None:
@@ -23,10 +26,12 @@ def check_github_connection() -> None:
     Raises:
         Exception: If the GitHub API returns a non-200 status code
     """
+    if GITHUB_TOKEN is None:
+        logger.error("No GitHub token provided!")
     rate_limit: RateLimit = g.get_rate_limit()
     if rate_limit.core.remaining == 0:
         raise Exception("Rate limit exceeded")
-    print("GitHub connection successful!")
+    logger.info("GitHub connection successful!")
 
 
 def get_stargazers(owner: str, repo: str) -> PaginatedList[NamedUser]:
@@ -44,16 +49,15 @@ def get_stargazers(owner: str, repo: str) -> PaginatedList[NamedUser]:
     return repo.get_stargazers()
 
 
-def get_starred_repos_for_user(starred_url: str) -> PaginatedList[Repository]:
+def get_starred_repos_for_user(user: NamedUser) -> PaginatedList[Repository]:
     """
-    Fetch repositories starred by a given user using the starred_url.
+    Fetch repositories starred by a given user.
 
     Args:
-        starred_url (str): The GitHub URL to fetch the starred repositories of a user.
+        user (NamedUser): The GitHub user object whose starred repositories we want to fetch.
 
     Returns:
         List[Repository]: List of repositories the user has starred.
     """
-    user: NamedUser = g.get_user(starred_url)
     starred_repos: PaginatedList[Repository] = user.get_starred()
     return starred_repos
