@@ -22,29 +22,17 @@ def get_repository_neighbours(owner: str, repo: str) -> List[Dict]:
     Returns:
         List[Dict]: A list of repositories with shared stargazers.
     """
-    try:
-        # Step 1: Get stargazers for the given repository
-        stargazers: PaginatedList[NamedUser] = get_stargazers(owner, repo)
-        if not stargazers:
-            logger.warning(f"No stargazers found for {repo} by {owner}")
-            return []
-
-    except GithubException as e:
-        logger.error(f"GitHub API error while fetching stargazers for {repo} by {owner}: {e}")
-        raise
+    # Step 1: Get stargazers for the given repository
+    stargazers: PaginatedList[NamedUser] = get_stargazers(owner, repo)
+    if not stargazers:
+        logger.warning(f"No stargazers found for {repo} by {owner}")
+        return []
 
     # Step 2: Build a map of repositories to users who starred them
     repo_to_users: Dict[str, set[str]] = defaultdict(set)
 
-    if stargazers is None:
-        return []
-
     for stargazer in stargazers:
-        try:
-            starred_repos: PaginatedList[Repository] = get_starred_repos_for_user(stargazer)
-        except GithubException as e:
-            logger.error(f"GitHub API error while fetching starred repositories for {stargazer.login}: {e}")
-            continue
+        starred_repos: PaginatedList[Repository] = get_starred_repos_for_user(stargazer)
 
         # Step 3: Add the stargazer to each repository they have starred
         for starred_repo in starred_repos:
