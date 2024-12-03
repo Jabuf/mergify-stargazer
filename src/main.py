@@ -1,11 +1,11 @@
-import json
 import logging
 import os
 
 import uvicorn
 from dotenv import load_dotenv
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.openapi.utils import get_openapi
+from starlette.responses import JSONResponse
 
 from src.api.routes import router
 from src.config.urls import API_VERSION
@@ -36,6 +36,25 @@ try :
     JWTHandler.check_secrets()
 except AuthenticationError as e:
     logger.critical(f"Configuration error: {e}")
+
+# Middleware for JWT validation
+@app.middleware("http")
+async def jwt_validation_middleware(request: Request, call_next):
+    """
+    Middleware to validate JWT for specific routes.
+    """
+    if request.url.path.startswith(API_VERSION): # Need to be adapted
+        token = request.headers.get("Authorization")
+        if not token:
+            return JSONResponse({"error": "Missing token"}, status_code=401)
+        try:
+            token = token.split("Bearer ")[1]
+            JWTHandler.verify_token(token, JWTHandler.access_secret)
+        except AuthenticationError as ex:
+            return JSONResponse({"error": str(ex)}, status_code=401)
+
+    response = await call_next(request)
+    return response
 
 app.include_router(router, prefix=API_VERSION)
 

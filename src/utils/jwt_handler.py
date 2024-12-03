@@ -19,10 +19,10 @@ class AuthenticationTokens(TypedDict):
     refreshToken: str
 
 class JWTHandler:
-    _access_secret = os.getenv("ACCESS_TOKEN_SECRET", "") # An empty string will lead to an error, which is intended since a secret is mandatory
-    _refresh_secret = os.getenv("REFRESH_TOKEN_SECRET", "")
-    _access_token_lifetime = int(os.getenv("ACCESS_TOKEN_LIFETIME", 300))  # in seconds
-    _refresh_token_lifetime = int(os.getenv("REFRESH_TOKEN_LIFETIME", 1800))  # in seconds
+    access_secret = os.getenv("ACCESS_TOKEN_SECRET", "") # An empty string will lead to an error, which is intended since a secret is mandatory
+    refresh_secret = os.getenv("REFRESH_TOKEN_SECRET", "")
+    access_token_lifetime = int(os.getenv("ACCESS_TOKEN_LIFETIME", 300))  # in seconds
+    refresh_token_lifetime = int(os.getenv("REFRESH_TOKEN_LIFETIME", 1800))  # in seconds
 
     @staticmethod
     def generate_authentication_tokens(user_info: UserInformationJWT) -> AuthenticationTokens:
@@ -31,10 +31,10 @@ class JWTHandler:
         """
         return {
             "accessToken": JWTHandler._generate_token(
-                user_info, JWTHandler._access_secret, JWTHandler._access_token_lifetime
+                user_info, JWTHandler.access_secret, JWTHandler.access_token_lifetime
             ),
             "refreshToken": JWTHandler._generate_token(
-                user_info, JWTHandler._refresh_secret, JWTHandler._refresh_token_lifetime
+                user_info, JWTHandler.refresh_secret, JWTHandler.refresh_token_lifetime
             ),
         }
 
@@ -63,7 +63,7 @@ class JWTHandler:
         """
         Refresh authentication tokens using a valid refresh token.
         """
-        JWTHandler.verify_token(refresh_token, JWTHandler._refresh_secret)
+        JWTHandler.verify_token(refresh_token, JWTHandler.refresh_secret)
         decoded = JWTHandler.decode_token(refresh_token)
         return JWTHandler.generate_authentication_tokens(decoded)
 
@@ -83,5 +83,5 @@ class JWTHandler:
         Throw an error if the secrets used to generate the JWTs aren't valid.
         To be valid you must have both the secret for the access and refresh token filled in the environment variables (see the corresponding keys above), and they must be different.
         """
-        if not JWTHandler._access_secret or not JWTHandler._refresh_secret or JWTHandler._access_secret == JWTHandler._refresh_secret:
+        if not JWTHandler.access_secret or not JWTHandler.refresh_secret or JWTHandler.access_secret == JWTHandler.refresh_secret:
             raise AuthenticationError("Invalid or missing JWT secrets.")
