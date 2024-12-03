@@ -11,7 +11,11 @@ load_dotenv()
 
 # Authenticate using the GitHub token
 GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")
-g = Github(GITHUB_TOKEN)
+# The per_page setting should ideally be customizable at least using a EV.
+# Maybe initializing multiple clients for different use cases could be an approach.
+# For example with per_page 10, 30 and 100, but it could also have other different settings.
+# 100 is the maximum allowed for the parameter per_page : https://docs.github.com/en/rest/using-the-rest-api/using-pagination-in-the-rest-api
+g = Github(GITHUB_TOKEN, per_page=100)
 
 logger = logging.getLogger('uvicorn.error')
 
