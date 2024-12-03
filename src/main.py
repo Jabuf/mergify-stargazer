@@ -1,9 +1,11 @@
+import json
 import logging
 import os
 
 import uvicorn
 from dotenv import load_dotenv
 from fastapi import FastAPI
+from fastapi.openapi.utils import get_openapi
 
 from src.api.routes import router
 from src.config.urls import API_VERSION
@@ -27,6 +29,16 @@ app = FastAPI()
 check_github_connection()
 
 app.include_router(router, prefix=API_VERSION)
+
+
+def print_openapi_schema():
+    openapi_schema = get_openapi(title="Stargazer API", version="1.0.0", routes=app.routes)
+    for path, path_info in openapi_schema["paths"].items():
+        for method, operation in path_info.items():
+            print(f"{method.upper()} {path} -> {operation.get('summary', 'No summary')}")
+
+
+app.add_event_handler("startup", print_openapi_schema)
 
 
 @app.get("/")
