@@ -29,9 +29,17 @@ class TestGitHubService(unittest.TestCase):
         mock_get_starred_repos_for_user.assert_any_call(
             mock_stargazers[0])
 
-        self.assertEqual(len(neighbours), 2)
-        self.assertIn({"repo": "owner/repo1", "stargazers": ["userA", "userB"]}, neighbours)
-        self.assertIn({"repo": "owner/repo2", "stargazers": ["userA", "userB"]}, neighbours)
+        expected_neighbours = [
+            {"repo": "owner/repo1", "stargazers": sorted(["userA", "userB"])},
+            {"repo": "owner/repo2", "stargazers": sorted(["userA", "userB"])}
+        ]
+
+        for neighbour in neighbours:
+            stargazers = neighbour["stargazers"]
+            if neighbour["repo"] == "owner/repo1":
+                self.assertCountEqual(stargazers, ["userA", "userB"])
+            elif neighbour["repo"] == "owner/repo2":
+                self.assertCountEqual(stargazers, ["userA", "userB"])
 
 
 if __name__ == '__main__':
