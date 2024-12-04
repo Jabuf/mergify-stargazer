@@ -9,17 +9,21 @@ import jwt
 class AuthenticationError(Exception):
     pass
 
+
 # The structure of the JWT payload
 class UserInformationJWT(TypedDict):
     userName: str
+
 
 # Structure for returned tokens
 class AuthenticationTokens(TypedDict):
     accessToken: str
     refreshToken: str
 
+
 class JWTHandler:
-    access_secret = os.getenv("ACCESS_TOKEN_SECRET", "") # An empty string will lead to an error, which is intended since a secret is mandatory
+    access_secret = os.getenv("ACCESS_TOKEN_SECRET",
+                              "")  # An empty string will lead to an error, which is intended since a secret is mandatory
     refresh_secret = os.getenv("REFRESH_TOKEN_SECRET", "")
     access_token_lifetime = int(os.getenv("ACCESS_TOKEN_LIFETIME", 300))  # in seconds
     refresh_token_lifetime = int(os.getenv("REFRESH_TOKEN_LIFETIME", 1800))  # in seconds

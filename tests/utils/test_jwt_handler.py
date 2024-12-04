@@ -54,5 +54,6 @@ class TestJWTHandler(unittest.TestCase):
         except AuthenticationError:
             self.fail()
 
+
 if __name__ == "__main__":
     unittest.main()

@@ -27,15 +27,16 @@ logger.info("Log level : " + log_level)
 app = FastAPI()
 
 # Check if GitHub connection is valid
-try :
+try:
     check_github_connection()
 except GitHubAPIException as e:
     logger.critical(f"GitHub API error: {e}")
 # Check if JWT secrets are present
-try :
+try:
     JWTHandler.check_secrets()
 except AuthenticationError as e:
     logger.critical(f"Configuration error: {e}")
+
 
 # Middleware for JWT validation
 @app.middleware("http")
@@ -43,7 +44,7 @@ async def jwt_validation_middleware(request: Request, call_next):
     """
     Middleware to validate JWT for specific routes.
     """
-    if request.url.path.startswith(API_VERSION): # Need to be adapted
+    if request.url.path.startswith(API_VERSION):  # Need to be adapted
         token = request.headers.get("Authorization")
         if not token:
             return JSONResponse({"error": "Missing token"}, status_code=401)
@@ -55,6 +56,7 @@ async def jwt_validation_middleware(request: Request, call_next):
 
     response = await call_next(request)
     return response
+
 
 app.include_router(router, prefix=API_VERSION)
 

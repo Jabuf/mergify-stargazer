@@ -23,7 +23,8 @@ class TestStarNeighboursEndpoint(unittest.TestCase):
         client = TestClient(app)
 
         # Generate a valid JWT token
-        valid_token = JWTHandler._generate_token({"username": "valid_user"}, secret=JWTHandler.access_secret, lifetime=JWTHandler.access_token_lifetime)
+        valid_token = JWTHandler._generate_token({"username": "valid_user"}, secret=JWTHandler.access_secret,
+                                                 lifetime=JWTHandler.access_token_lifetime)
 
         # Simulate a GET request to /starneighbours
         url = API_VERSION + ROUTE_STARNEIGHBOURS.format(user="owner", repo="repo")
