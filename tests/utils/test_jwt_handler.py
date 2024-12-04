@@ -37,7 +37,7 @@ class TestJWTHandler(unittest.TestCase):
 
     def test_decode_token(self):
         tokens = JWTHandler.generate_authentication_tokens(self.user_info)
-        decoded = JWTHandler.decode_token(tokens["accessToken"])
+        decoded = JWTHandler.decode_token(tokens["accessToken"], JWTHandler.access_secret)
         self.assertEqual(decoded["userName"], self.user_info["userName"])
 
     def test_check_secrets_invalid(self):

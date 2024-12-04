@@ -6,7 +6,6 @@ from dotenv import load_dotenv
 from github import Github, Repository, Stargazer, RateLimit, NamedUser, GithubException
 from github.PaginatedList import PaginatedList
 
-# Load environment variables
 load_dotenv()
 
 # Authenticate using the GitHub token
@@ -21,6 +20,18 @@ logger = logging.getLogger('uvicorn.error')
 
 
 def _safe_github_call(func, *args, **kwargs):
+    """
+    Wraps GitHub API calls to handle exceptions specific to the GitHub API. Logs the error and raises a custom
+    GitHubAPIException with additional context for further handling.
+
+    Args:
+        func (callable): The GitHub API function to execute.
+        *args: Positional arguments for the GitHub API function.
+        **kwargs: Keyword arguments for the GitHub API function.
+
+    Returns:
+        The result of the API function call if successful.
+    """
     try:
         return func(*args, **kwargs)
     except GithubException as e:  # Catch only GitHub-related exceptions
@@ -30,7 +41,7 @@ def _safe_github_call(func, *args, **kwargs):
 
 def check_github_connection() -> None:
     """
-    Check if GitHub connection is working by hitting the rate limit endpoint.
+    Check if GitHub connection is working by checking the token and hitting the rate limit endpoint.
 
     Returns:
         None
@@ -66,8 +77,9 @@ def get_stargazers(owner: str, repo: str) -> PaginatedList[NamedUser] | None:
         repo (str): The name of the repository.
 
     Returns:
-        List[Stargazer]: A list of stargazer objects.
+        List[Stargazer] | None: A list of stargazer objects or None if the repository isn't found.
     """
+    # Here we could make only one call by making a direct request to the GitHub API.
     repo = _safe_github_call(g.get_repo, f"{owner}/{repo}")
     if repo is None:
         return None  # Return an empty list if the repository was not found
@@ -84,6 +96,7 @@ def get_starred_repos_for_user(user: NamedUser) -> PaginatedList[Repository]:
     Returns:
         List[Repository]: List of repositories the user has starred.
     """
+    # Multiple calls can be made here, PyGithub automatically manage the pagination.
     starred_repos: PaginatedList[Repository] = _safe_github_call(user.get_starred)
     return starred_repos
 
@@ -94,7 +107,12 @@ class GitHubAPIException(Exception):
     def __init__(self, message: str, code: int = None, github_exception: GithubException = None):
         super().__init__(message)
         self.message = message
-        self.code = code if code is not None else (github_exception.status if github_exception else 500)
+        if code is not None:
+            self.code = code
+        elif github_exception:
+            self.code = github_exception.status
+        else:
+            self.code = 500
         self.github_exception = github_exception
 
     def __str__(self):

@@ -12,11 +12,11 @@ from src.config.urls import API_VERSION
 from src.services.github import check_github_connection, GitHubAPIException
 from src.utils.jwt_handler import JWTHandler, AuthenticationError
 
-# Load environment variables from .env
 load_dotenv()
 
 log_level = os.getenv("LOG_LEVEL", logging.DEBUG)
 
+# Initialize logger
 logging.basicConfig(
     level=log_level,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
@@ -24,9 +24,10 @@ logging.basicConfig(
 logger = logging.getLogger('uvicorn.error')
 logger.info("Log level : " + log_level)
 
+# Start the application
 app = FastAPI()
 
-# Check if GitHub connection is valid
+# Check if the GitHub connection is valid
 try:
     check_github_connection()
 except GitHubAPIException as e:
@@ -58,6 +59,7 @@ async def jwt_validation_middleware(request: Request, call_next):
     return response
 
 
+# Add and display routes
 app.include_router(router, prefix=API_VERSION)
 
 
@@ -73,7 +75,7 @@ app.add_event_handler("startup", print_openapi_schema)
 
 @app.get("/")
 def read_root():
-    return {"Mergify Stagazer": "A technical showcase project developed as part of the hiring process at Mergify"}
+    return {"Stagazer": "An API that provides information related to the Stargazers feature of GitHub"}
 
 
 if __name__ == "__main__":

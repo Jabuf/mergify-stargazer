@@ -15,7 +15,7 @@ logger = logging.getLogger('uvicorn.error')
 def get_star_neighbours(user: str, repo: str):
     start_time = time.time()
     try:
-        starneighbours = get_repository_neighbours(user, repo)
+        starneighbours: list[dict] = get_repository_neighbours(user, repo)
     except GitHubAPIException as e:
         raise HTTPException(status_code=e.code, detail=e.message)
 
@@ -24,6 +24,7 @@ def get_star_neighbours(user: str, repo: str):
 
     end_time = time.time()
     elapsed_time = end_time - start_time
+    # I've chosen to let this log to better test the performances of the endpoint
     logger.info(f"Request took {elapsed_time:.2f} seconds.")
 
     return starneighbours
