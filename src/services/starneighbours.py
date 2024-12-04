@@ -2,7 +2,7 @@ import logging
 from collections import defaultdict
 from typing import List, Dict
 
-from github import Repository, GithubException
+from github import Repository
 from github.NamedUser import NamedUser
 from github.PaginatedList import PaginatedList
 

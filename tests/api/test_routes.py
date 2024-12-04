@@ -1,5 +1,6 @@
 import unittest
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch
+
 from fastapi.testclient import TestClient
 
 from src.config.urls import ROUTE_STARNEIGHBOURS, API_VERSION

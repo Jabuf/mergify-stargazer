@@ -1,4 +1,3 @@
-import os
 import unittest
 
 from src.utils.jwt_handler import JWTHandler, AuthenticationError
