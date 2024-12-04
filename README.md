@@ -17,20 +17,19 @@ complexity and may make the code appear more convoluted, since we currently have
 
 Other web framework I considered :
 
-- Django : We didn't need many features provided by a full-stack framework, so it didn't seem the more adapted choice
-- Flask : Since performance seemed an important aspect from the start, I wanted to be able to easily implement
+- **Django** : We didn't need many features provided by a full-stack framework, so it didn't seem the more adapted choice
+- **Flask** : Since performance seemed an important aspect from the start, I wanted to be able to easily implement
   asynchronous mechanisms
 
-Overall I can't say I'm familiar enough with these frameworks to pretend I made the best choice, but FastAPI seemed the
-best for our case (an API with a focus on performance).
+Overall I can't say I'm familiar enough with these frameworks to pretend I made the best choice, but FastAPI seemed adapted for our case (an API with a focus on performance).
 
 ## Interacting with GitHub API - PyGithub
 
 I made the choice to use PyGithub over requesting directly the GitHub API.
 The main benefits are having type hints available for GitHub objects and managing the pagination automatically.
 However, it also came with limitations that I only realized later on.
-For example, you can’t get the stargazers of a repo in a single request using it. You need to first to request for the
-repo, then request for the stargazers.
+For example, you can’t get the stargazers of a repo in a single request using it (you need to first to request for the
+repo, then request for the stargazers).
 GitHub API, on the other hand, provides an endpoint to get stargazers with a single request (
 /repos/{owner}/{repo}/stargazers).
 Another important limitations is that it doesn't natively support asynchronous
@@ -44,7 +43,7 @@ operations.
 
 ## Authentication - PyJWT
 
-I've considered OAuth 2.0 and JWT but ended up choosing the latest primarily because I had prior experience with it.
+I've considered **OAuth 2.0** and **JWT** but ended up choosing the latest primarily because I had prior experience with it.
 Additionally, we didn’t need third-party authentication, which is one key advantage of OAuth.
 
 Currently, there's features that aren't used, for example I didn't implement an endpoint to refresh the tokens.
@@ -69,26 +68,27 @@ I also didn't explore other libraries ([like github3.py](https://github.com/sigm
 
 ## Current limitations and weak points
 
-- Performance : This was already mentioned above.
-- Testing : Testing mostly focuses on code coverage and doesn’t include many use cases. That part could definitely be
+- **Performance** : This was already mentioned above.
+- **Testing** : Testing mostly focuses on code coverage and doesn’t include many use cases. That part could definitely be
   improved. Also, there's no integration testing.
-- Error handling : Some errors aren’t caught, and error responses need to be formalized.
-- Logic : We didn't do anything regarding how close projects are.
+- **Error handling** : Some errors aren’t caught, and error responses need to be formalized.
+- **Logic** : We didn't do anything regarding how close projects are.
 
 ## Potentials improvements
 
-- GraphQL over REST : GitHub API return lot of unnecessary information, using GraphQL to fetch only the required data
-  could improve performance.
-- CI/CD : Nothing has been done to integrate our API with CI/CD tools. I'd like to at least use GHA here, it could run
+- **CI/CD** : Nothing has been done to integrate our API with CI/CD tools. I'd like to at least use GHA here, it could run
   operations on commit/push (apply style rules and run tests), send notifications, deploy, etc.
-- Formatting : I only used the native formatter in PyCharm. Having a common formatter is very important for
+- **Formatting** : I only used the native formatter in PyCharm. Having a common formatter is very important for
   collaborative projects (so changes made aren't obstructed by formatting).
+- **Documentation** : More documentation could be added, for example how the authentication mechanism works, or a description of the endpoints available.
 
 ### Scalability
 
 Scalability and performance is currently the biggest aspect that would need improvement, here's a few potential
-mechanisms that could help :
+mechanisms that could help (in order of pertinence) :
 
 - Caching the results of some requests (for example the starred repos of a user).
-- Making asynchronous requests when relevant (for example when looping to get the starred repos of users).
-- GraphQL could help, as mentioned above.
+- Mixing use of PyGithub and direct call to GiHub API.
+- Making asynchronous requests (using **asyncio**) when relevant (for example when looping to get the starred repos of users).
+- Switching to **GraphQL** to fetch only the required data could improve performance since GitHub API return lot of unnecessary data.
+- Make use of parallel processing.
