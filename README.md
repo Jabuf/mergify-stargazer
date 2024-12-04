@@ -21,20 +21,26 @@ Other web framework I considered :
 - Flask : Since performance seemed an important aspect from the start, I wanted to be able to easily implement
   asynchronous mechanisms
 
-Overall I can't say I'm familiar enough with these frameworks to pretend I made the best choice, but FastAPI seemed the best for our case (an API with a focus on performance). 
+Overall I can't say I'm familiar enough with these frameworks to pretend I made the best choice, but FastAPI seemed the
+best for our case (an API with a focus on performance).
 
 ## Interacting with GitHub API - PyGithub
 
-I made the choice to use PyGithub over requesting directly the GitHub API. 
-The main benefits are having type hints available for GitHub objects and managing the pagination automatically. 
-However, it also came with limitations that I only realized later on. 
-For example, you can’t get the stargazers of a repo in a single request using it. You need to first to request for the repo, then request for the stargazers. 
-GitHub API, on the other hand, provides an endpoint to get stargazers with a single request (/repos/{owner}/{repo}/stargazers).
-Another important limitations is that it doesn't natively support asynchronous operations ([This is currently a top issue](https://github.com/PyGithub/PyGithub/issues/1538)).
+I made the choice to use PyGithub over requesting directly the GitHub API.
+The main benefits are having type hints available for GitHub objects and managing the pagination automatically.
+However, it also came with limitations that I only realized later on.
+For example, you can’t get the stargazers of a repo in a single request using it. You need to first to request for the
+repo, then request for the stargazers.
+GitHub API, on the other hand, provides an endpoint to get stargazers with a single request (
+/repos/{owner}/{repo}/stargazers).
+Another important limitations is that it doesn't natively support asynchronous
+operations ([This is currently a top issue](https://github.com/PyGithub/PyGithub/issues/1538)).
 
-For future developments I think mixing PyGithub with direct API call is the smartest approach. 
-Having PyGithub would allow us to have type hints for GitHub API and simplify operations that don't need to be optimized.
-And, when performance is an issue, we could make direct API calls to reduce the number of requests or allow asynchronous operations.
+For future developments I think mixing PyGithub with direct API call is the smartest approach.
+Having PyGithub would allow us to have type hints for GitHub API and simplify operations that don't need to be
+optimized.
+And, when performance is an issue, we could make direct API calls to reduce the number of requests or allow asynchronous
+operations.
 
 ## Authentication - PyJWT
 
@@ -50,29 +56,39 @@ Unittest was the easiest to use since it's already built in Python and provides 
 # Current issues and area of improvements
 
 ## Performance issues
-Currently, even if the endpoint is working as intended, the performances are terrible for users with a lot of starred repositories.
+
+Currently, even if the endpoint is working as intended, the performances are terrible for users with a lot of starred
+repositories.
 I also didn't test extensively, so it's possible I overlook other issues.
 
 ## Lack of knowledge about the GitHub API
+
 While I spent time reviewing the PyGithub and GitHub API documentation, I didn’t gain expert-level knowledge overnight.
 As such, it's possible that I overlooked features or endpoints that could have been more adapted in my case.
 I also didn't explore other libraries ([like github3.py](https://github.com/sigmavirus24/github3.py)).
 
 ## Current limitations and weak points
+
 - Performance : This was already mentioned above.
-- Testing : Testing mostly focuses on code coverage and doesn’t include many use cases. That part could definitely be improved. Also, there's no integration testing.
+- Testing : Testing mostly focuses on code coverage and doesn’t include many use cases. That part could definitely be
+  improved. Also, there's no integration testing.
 - Error handling : Some errors aren’t caught, and error responses need to be formalized.
+- Logic : We didn't do anything regarding how close projects are.
 
 ## Potentials improvements
-- GraphQL over REST : GitHub API return lot of unnecessary information, using GraphQL to fetch only the required data could improve performance.
-- CI/CD : Nothing has been done to integrate our API with CI/CD tools. I'd like to at least use GHA here, it could run operations on commit/push (apply style rules and run tests), send notifications, deploy, etc.
-- Formatting : I only used the native formatter in PyCharm. Having a common formatter is very important for collaborative projects (so changes made aren't obstructed by formatting).
+
+- GraphQL over REST : GitHub API return lot of unnecessary information, using GraphQL to fetch only the required data
+  could improve performance.
+- CI/CD : Nothing has been done to integrate our API with CI/CD tools. I'd like to at least use GHA here, it could run
+  operations on commit/push (apply style rules and run tests), send notifications, deploy, etc.
+- Formatting : I only used the native formatter in PyCharm. Having a common formatter is very important for
+  collaborative projects (so changes made aren't obstructed by formatting).
 
 ### Scalability
-Scalability and performance is currently the biggest aspect that would need improvement, here's a few potential mechanisms that could help :
+
+Scalability and performance is currently the biggest aspect that would need improvement, here's a few potential
+mechanisms that could help :
+
 - Caching the results of some requests (for example the starred repos of a user).
 - Making asynchronous requests when relevant (for example when looping to get the starred repos of users).
 - GraphQL could help, as mentioned above.
-
-
-- STYLE TODO
