@@ -2,6 +2,16 @@
 
 An API that provides information related to the Stargazers feature of GitHub.
 
+# How to run
+1. Duplicate and rename the env.template  to .env. Replace accordingly the EVs.
+2. Run the application using the [Uvicorn CLI](https://www.uvicorn.org/deployment/) : 
+
+```bash 
+uvicorn main:app --reload 
+```
+
+
+
 # Development approach
 
 We approached the development on this repository as if the end goal was to have a big application with numerous
